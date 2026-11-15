@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import String,ForeignKey,UniqueConstraint,DateTime,JSON,Double
+from sqlalchemy import String,ForeignKey,DateTime,JSON,Double
 from sqlalchemy.orm import Mapped,mapped_column
 from src.config.database import Base
 class RankingRun(Base):
@@ -14,4 +14,6 @@ class RankingRun(Base):
     snapshot:Mapped[dict]=mapped_column(JSON,default=dict)
     result:Mapped[dict]=mapped_column(JSON,default=dict)
     error:Mapped[str]=mapped_column(String(600),default='')
+    # 来源撤回导致冻结依据失效时留痕；结果 JSON 与 artifact 保留但不再可作为依据
+    invalidated_reason:Mapped[str]=mapped_column(String(600),default='')
     created_at:Mapped[datetime]=mapped_column(DateTime,default=datetime.utcnow)

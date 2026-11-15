@@ -13,7 +13,8 @@ return <>
 <PageHeading no="04" title="结果与重现" sub="能力依赖比较对手；一次名次，仍需放进反复重拟合的分布里阅读。"/>
 <RunSelect/><ErrorNotice error={error}/>
 {!run&&<div className="empty"><h2>还没有可阅读的研究。</h2><p>先到拟合工作台冻结一份票数并排队。</p><a href="#/runs">前往拟合工作台 →</a></div>}
-{run&&!r&&<div className="empty"><StatusBadge status={run.status}/><h2>{run.name}</h2><p>{run.error||'研究仍在队列中。完成后结果会自动出现。'}</p><a href="#/runs">返回工作台核对 →</a></div>}
+{run&&run.status==='invalidated'&&<div className="empty invalidated-entry"><StatusBadge status={run.status}/><h2>{run.name}</h2><p>该研究冻结的票数引用了已撤回来源，依据已失效；快照与历史结果仅留档，不能再提出补票提案或分发。</p><p className="error-text">{run.invalidated_reason}</p><a href="#/sources">查看撤回影响范围 →</a></div>}
+{run&&!r&&run.status!=='invalidated'&&<div className="empty"><StatusBadge status={run.status}/><h2>{run.name}</h2><p>{run.error||'研究仍在队列中。完成后结果会自动出现。'}</p><a href="#/runs">返回工作台核对 →</a></div>}
 {r&&run&&<>
 <div className="result-byline"><b>#{run.id}　{run.name}</b><span>λ {run.ridge} · seed {run.seed} · {run.repeats}次重拟合</span></div>
 <div className="result-metrics"><div><small>正票比较图</small><b>{r.graph.vertices} / {r.graph.edges}</b><span>作品 / 比较边 · 连通</span></div><div><small>冻结票数</small><b>{r.graph.votes.toLocaleString()}</b><span>条件于每对固定总票</span></div><div><small>中心化能力总和</small><b>{num(r.diagnostic.centering_sum,8)}</b><span>可正可负，非绝对品质</span></div><div><small>投影梯度最大值</small><b>{r.diagnostic.gradient_max.toExponential(2)}</b><span>阈值 ≤ 1e−6</span></div></div>

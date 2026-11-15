@@ -1,4 +1,4 @@
-from pydantic import BaseModel,Field,ConfigDict,model_validator
+from pydantic import BaseModel,Field,ConfigDict
 from datetime import datetime
 class RunInput(BaseModel):
     name:str=Field(min_length=2,max_length=140)
@@ -12,5 +12,6 @@ class RunOut(RunInput):
     snapshot:dict
     result:dict
     error:str
+    invalidated_reason:str=''
     created_at:datetime
     model_config=ConfigDict(from_attributes=True)

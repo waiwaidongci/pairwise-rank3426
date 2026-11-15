@@ -1,10 +1,11 @@
-import {useEffect,useState} from 'react';import {studyStore,loadStudies,saveStudy} from '../stores/studies';import {inputStore,loadInputs} from '../stores/inputs';import {researchStore,loadRuns} from '../stores/research';import {authStore,canEdit} from '../stores/auth';import {useTask} from '../hooks/useTask';import StudySelect from '../components/StudySelect';import ComparisonGraph from '../components/ComparisonGraph';import ErrorNotice from '../components/common/ErrorNotice';export default function Overview(){const {items,selected}=studyStore.use(),{concepts,pairs}=inputStore.use(),{runs}=researchStore.use(),{user}=authStore.use();const {error,perform}=useTask();const [open,setOpen]=useState(false);useEffect(()=>{perform(loadStudies);perform(loadRuns)},[]);useEffect(()=>{if(selected)perform(()=>loadInputs(selected))},[selected]);const study=items.find(s=>s.id===selected);return <>
+import {useEffect,useState} from 'react';import {studyStore,loadStudies,saveStudy} from '../stores/studies';import {inputStore,loadInputs} from '../stores/inputs';import {withdrawalStore,loadWithdrawals} from '../stores/withdrawals';import {researchStore,loadRuns} from '../stores/research';import {authStore,canEdit} from '../stores/auth';import {useTask} from '../hooks/useTask';import StudySelect from '../components/StudySelect';import ComparisonGraph from '../components/ComparisonGraph';import ErrorNotice from '../components/common/ErrorNotice';export default function Overview(){const {items,selected}=studyStore.use(),{concepts,pairs}=inputStore.use(),{sources}=withdrawalStore.use(),{runs}=researchStore.use(),{user}=authStore.use();const {error,perform}=useTask();const [open,setOpen]=useState(false);useEffect(()=>{perform(loadStudies);perform(loadRuns);perform(loadWithdrawals)},[]);useEffect(()=>{if(selected){perform(()=>loadInputs(selected));perform(()=>loadWithdrawals(selected))}},[selected]);const study=items.find(s=>s.id===selected);const activePairs=pairs.filter(p=>!p.quarantined),quarantinedCount=pairs.length-activePairs.length,withdrawn=sources.some(s=>s.study_id===selected&&s.withdrawn);return <>
 <div className="folio-line">
 <span>RESEARCH FOLIO / 2026.11</span>
 <span>17位策展研究员 · 匿名作品方案</span>
 </div>
 <StudySelect/>
 <ErrorNotice error={error}/>
+{withdrawn&&<p className="withdrawal-banner" role="status">该研究有来源已撤回：台账仅统计未隔离票数，{quarantinedCount}对比较已隔离；受影响研究失效、已批准提案停发。</p>}
 <section className="opening">
 <div className="opening-copy">
 <p className="eyebrow">01 / COMPARISON BEFORE CONCLUSION</p>
@@ -19,7 +20,7 @@ import {useEffect,useState} from 'react';import {studyStore,loadStudies,saveStud
 <a className="text-link" href="#/sources">核对比较网络 ↗</a>
 </div>
 <figure className="network-figure">
-<ComparisonGraph concepts={concepts} pairs={pairs}/>
+<ComparisonGraph concepts={concepts} pairs={activePairs}/>
 <figcaption>
 <span>图 01　真实票数形成的比较关系</span>
 <span>线宽随总票数变化</span>
@@ -34,12 +35,13 @@ import {useEffect,useState} from 'react';import {studyStore,loadStudies,saveStud
 </div>
 <div>
 <small>有票比较边</small>
-<strong>{pairs.length}<i>对</i>
+<strong>{activePairs.length}<i>对</i>
 </strong>
+{quarantinedCount>0&&<small className="warn-text">另{quarantinedCount}对已隔离</small>}
 </div>
 <div>
 <small>独立成对票数</small>
-<strong>{pairs.reduce((n,p)=>n+p.left_wins+p.right_wins,0).toLocaleString()}<i>票</i>
+<strong>{activePairs.reduce((n,p)=>n+p.left_wins+p.right_wins,0).toLocaleString()}<i>票</i>
 </strong>
 </div>
 <p>能力采用总和为零的尺度。<br/>bootstrap呈现重采样名次变化，<br/>不表示“作品最优”的后验概率。</p>
@@ -60,7 +62,7 @@ import {useEffect,useState} from 'react';import {studyStore,loadStudies,saveStud
 <div>
 <span>Ⅲ</span>
 <h3>补充评议</h3>
-<p>{runs.filter(r=>r.status==='completed').length}项完成研究可作为补票依据</p>
+<p>{runs.filter(r=>r.status==='completed').length}项有效完成研究可作为补票依据</p>
 <a href="#/proposals">提交人工审阅 →</a>
 </div>
 </section>{canEdit(user)&&<section className="registry">

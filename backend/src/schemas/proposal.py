@@ -1,4 +1,4 @@
-from pydantic import BaseModel,Field,ConfigDict,model_validator
+from pydantic import BaseModel,Field,ConfigDict
 from datetime import datetime
 from src.constants.enums import ProposalStatus
 class ProposalInput(BaseModel):
@@ -16,5 +16,6 @@ class ProposalOut(ProposalInput):
     status:str
     reviewer_note:str
     reviewed_by:str
+    halt_reason:str=''
     created_at:datetime
     model_config=ConfigDict(from_attributes=True)

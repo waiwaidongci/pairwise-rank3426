@@ -67,7 +67,7 @@ Compose恰好5服务，依赖使用 service_healthy；命名卷为数据库、Re
 | DATABASE_URL / REDIS_URL | Compose内部地址；本地开发可覆盖 |
 | OMP_NUM_THREADS / OPENBLAS_NUM_THREADS | 1，限制数值线程 |
 
-JWT有效8小时，PBKDF2-SHA256存储密码。三组跨端枚举为Role、RunStatus、ProposalStatus，定义位置分别在 `backend/src/constants/enums.py` 与 `frontend/src/constants/enums.ts`；被auth依赖、run/proposal服务与schema、worker、状态组件/账户/结果及提案页面使用。审计中间件记录写操作和导出（含权限拒绝）；全局异常中间件统一失败；Redis按IP限制登录30次/分钟。全局最多3个活动任务，单任务2–30作品、≤300边、50–200次重复；数值库单线程。
+JWT有效8小时，PBKDF2-SHA256存储密码。三组跨端枚举为Role、RunStatus（含invalidated）、ProposalStatus（含halted），定义位置分别在 `backend/src/constants/enums.py` 与 `frontend/src/constants/enums.ts`；被auth依赖、run/proposal服务与schema、worker、状态组件/账户/结果及提案页面使用。审计中间件记录写操作和导出（含权限拒绝）；全局异常中间件统一失败；Redis按IP限制登录30次/分钟。全局最多3个活动任务，单任务2–30作品、≤300边、50–200次重复；数值库单线程。产物目录可用 `ARTIFACTS_DIR` 覆盖，默认 `/artifacts`。
 
 ## 核心口径与可复算性
 
@@ -81,6 +81,17 @@ p(i beats j) = expit(θ_i−θ_j),    Σ_i θ_i = 0,    λ > 0
 显式正交零和基消除平移不确定性；解析梯度与Hessian交给SciPy trust-exact。接近机器精度的信赖域停滞用解析Newton步精修，每步需降低实际投影梯度且目标不超过浮点容差；最终独立检查有限目标及最大投影梯度≤1e−6，否则失败。原优化器消息与精修次数可查。正ridge防止完全分离使能力发散，但并不把断连图强行合并。稳定运算参考 [SciPy expit](https://docs.scipy.org/doc/scipy/reference/generated/scipy.special.expit.html) 与 [SciPy minimize](https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html)。
 
 提交时冻结研究、作品与票数；修改原始台账不回写历史快照。每条无向边只能有一条汇总记录；计算时按作品代码规范方向、台账保留录入方向，不把反向作为另一条证据。检查全部已登记作品（含孤点），拒绝自比、外部作品、重复边、无票边、负/非整数票数、断连图。自比不进入模型，胜率矩阵对角为null，页面只列其他对手。
+
+### 来源撤回口径
+
+票数按来源逐条留痕（`pair_counts.source` 必填于新录入），来源撤回通过 `POST /withdrawals` 贯穿台账、研究与分发：
+
+- 撤回只隔离该来源贡献的票数行（`quarantined=true`），其他来源行原样保留；隔离行不进入任何新快照，也不计入可用票数。
+- 已混合且无法按来源拆分的旧票不猜分摊：整张混合行隔离，票数保留在台账可查，禁止编辑。
+- 受影响的排队、运行中及已完成研究一律转为 `invalidated`：历史快照/结果 JSON/artifact 保留留档，但不能再提出补票提案；计算期间并发撤回则丢弃本次结果、不写产物。
+- 受影响研究名下的草稿与已批准提案转为 `halted`，已批准提案停止 CSV 分发、下载返回409；已退回（`rejected`）的历史决定不覆盖。
+- 重复撤回同一（研究, 来源）幂等返回，不重复扣票、不重复失效；撤回确认后新建研究/提案/下载请求都无法再获得引用旧依据的结果。撤回来源禁止再录入新票，需使用新来源标识。
+- 撤回按研究隔离：同名来源在另一研究的票数不受影响。`GET /withdrawals` 与 `GET /withdrawals/impact` 供页面列出来源状态、隔离票、失效研究与停发提案；撤回操作需要编辑权限并写入审计。
 
 Bootstrap使用 `Binomial(n_ij, w_ij/n_ij)`，每条边总票数固定、按观测比例抽样，再用相同λ重新拟合；不是按模型预测比例抽样。固定NumPy RNG seed，保存每次重采样的实际胜票、中心化能力、平均名次、首位分摊和梯度。能力相差≤1e−8按并列组取平均名次；并列首位均分1份。名次频率保留可能的小数名次；2.5%与97.5%经验分位采用线性插值，因此端点可为非整数，不宣称后验、家族覆盖或同时置信区间。
 

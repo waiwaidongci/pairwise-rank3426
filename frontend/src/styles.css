@@ -6,3 +6,24 @@
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 
 .rank-chart-scroll{overflow-x:auto;max-width:100%}@media(max-width:600px){.rank-plot{min-width:650px}.stability-spread>section{min-width:0}}
+.status.quarantined{color:var(--rust);border-color:oklch(74% .06 30);background:oklch(92% .03 35)}
+.status.invalidated,.status.halted{color:var(--rust);border-color:oklch(74% .06 30)}
+.status.active-pair{color:var(--sage);border-color:oklch(72% .04 140)}
+.quarantined-row{opacity:.62;background:oklch(92% .025 70)}
+.quarantined-row td{text-decoration:line-through;text-decoration-color:var(--rust);text-decoration-thickness:1px}
+.quarantined-row td:last-child,.quarantined-row .status{text-decoration:none}
+.source-cell{max-width:220px;overflow-wrap:anywhere}
+.warn-text{color:var(--rust)!important;font-size:10px}
+.withdrawal-banner{padding:13px 18px;border-left:3px solid var(--rust);background:oklch(91% .035 35);font-size:13px;margin-bottom:20px}
+.withdrawal-fold{border-color:oklch(74% .06 30)}
+.withdrawal-fold summary{color:var(--rust);font-weight:600}
+.danger-button{background:var(--rust);border-color:var(--rust);color:var(--light)}
+.withdrawal-panel{border:1px solid oklch(74% .06 30);border-left:3px solid var(--rust);padding:16px 20px;margin-top:22px;background:oklch(93% .022 70)}
+.withdrawal-panel h3{font-size:16px;margin-bottom:8px}
+.impact-list{list-style:none;padding:0;margin:10px 0 4px}
+.impact-list li{border-bottom:1px dashed var(--line);padding:10px 0;font-size:12px}
+.impact-list li b{display:block;color:var(--rust);font-weight:600}
+.impact-list li span{color:var(--muted);font-size:11px}
+.invalidated-entry{border-left:3px solid var(--rust);padding-left:16px;background:oklch(93% .02 70)}
+.halt-note{border-left-color:var(--rust)!important;background:oklch(92% .03 35)!important}
+.halt-note b{color:var(--rust)!important}
